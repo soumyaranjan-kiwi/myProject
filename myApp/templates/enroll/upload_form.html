@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UserFileForm</title>
+    <style>
+        /* Define your CSS styles for the form here */
+        /* This is just an example */
+    </style>
+</head>
+<body>
+    <form action="{% url 'fileupload' %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label for="file">Upload Excel File:</label>
+        <input type="file" id="file" name="file" accept=".xlsx" required>
+        <br>
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>
+<!--{% load static %}-->
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>UserFileForm</title>-->
+<!--    <style>-->
+<!--        /* Your CSS styles */-->
+<!--    </style>-->
+<!--    <script src="{% static 'js/upload.js' %}"></script>-->
+<!--</head>-->
+<!--<body>-->
+<!--    <div class="container">-->
+<!--        <div class="form-container">-->
+<!--            <form id="uploadForm" method="post" enctype="multipart/form-data">-->
+<!--                {% csrf_token %}-->
+<!--                <h1>Upload File Form</h1>-->
+<!--                <input type="email" name="email" placeholder="Email">-->
+<!--                <input type="file" name="file" accept=".xlsx">-->
+<!--                <input type="button" value="Submit" onclick="uploadFile()">-->
+<!--            </form>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</body>-->
+<!--</html>-->

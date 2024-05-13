@@ -1,20 +1,22 @@
 import os
-
-from django.shortcuts import render
-
-# Create your views here.
 from django.shortcuts import render, redirect
 from .forms import UserFileForm
 import pandas as pd
 from .models import UserFile, Feature, FeatureValidation, User
-from django.http import JsonResponse
 from datetime import datetime
-# from django.contrib.auth.decorators import login_required
-from django.utils.functional import SimpleLazyObject
 
 
 def showformdata(request):
-    downloads_folder = os.path.expanduser('~')  # Gets the user's home directory
+    """
+        Function to handle form data submission.
+
+        Parameters:
+        - request: HTTP request object
+
+        Returns:
+        - HTTP response object
+    """
+    downloads_folder = os.path.expanduser('~')
     excel_file_path = os.path.join(downloads_folder, 'Downloads', 'task.xlsx')
 
     if request.method == 'POST':
@@ -24,34 +26,29 @@ def showformdata(request):
             email = fm.cleaned_data['email']
             fm.save()
             user = User.objects.filter(email__icontains=email).first()
-            # Read Excel file and save its content into the database
-            df = pd.read_excel(excel_file_path)  # Read Excel file from the specified path
-            data=[]
+            df = pd.read_excel(excel_file_path)
+            data = []
             for index, row in df.iterrows():
-                # Extract data from each row
                 Epic = row['Epic'] if not pd.isnull(row['Epic']) else ''
                 Feature_name = row['Feature'] if not pd.isnull(row['Feature']) else ''
                 Validation = row['Validation'] if not pd.isnull(row['Validation']) else ''
                 AlertError_Message_if_required = row['AlertError_Message_if_required'] if not pd.isnull(
                     row['AlertError_Message_if_required']) else ''
                 Start_Date = row['Start_Date'] if not pd.isnull(row['Start_Date']) else ''
-
-                # Convert date string to the correct format (from "YYYY/MM/DD" to "YYYY-MM-DD")
                 if Start_Date:
                     try:
                         Start_Date = datetime.strptime(Start_Date, '%Y/%m/%d').strftime('%Y-%m-%d')
                     except ValueError:
                         print(f"Invalid date format: {Start_Date}. Skipping this row.")
-                        continue  # Skip this row if date format is invalid
+                        continue
                 else:
-                    Start_Date = None  # Set to None if Start_Date is an empty string
+                    Start_Date = None
 
                 data.append([Epic, Feature, Validation, AlertError_Message_if_required, Start_Date])
                 print(data)
                 status = row['Status']
                 if pd.isna(status):
-                    status = 1  # Default value for NaN
-                # Save data into the database
+                    status = 1
                 print(user)
                 user_file = UserFile.objects.create(
                     user=user,
@@ -69,15 +66,24 @@ def showformdata(request):
                     msg=Validation
                 )
 
-            return redirect('htmltable')  # Redirect to the 'htmltable/' URL
+            return redirect('htmltable')
         else:
             print('Form is not valid:', fm.errors)
     else:
-        fm = UserFileForm()  # Assign a default value if the request method is not POST
+        fm = UserFileForm()
     return render(request, 'enroll/userregistration.html', {'form': fm})
 
 
 def process_form_and_render_table(request):
+    """
+        Function to process form data and render a table.
+
+        Parameters:
+        - request: HTTP request object
+
+        Returns:
+        - HTTP response object
+    """
     if request.method == 'GET':
         user_files = UserFile.objects.all()
         data = []
@@ -85,9 +91,10 @@ def process_form_and_render_table(request):
             data.append({
                 'Epic': user_file.epic,
                 'Feature': ', '.join(feature.name for feature in user_file.features.all()),
-                'Validation': ', '.join(validation.msg for feature in user_file.features.all() for validation in feature.validations.all()),
-                'Error Message': user_file.error_msg,
-                'Start Date': user_file.start_date,
+                'Validation': ', '.join(
+                    validation.msg for feature in user_file.features.all() for validation in feature.validations.all()),
+                'error_message': user_file.error_msg,
+                'start_date': user_file.start_date,
                 'Status': user_file.get_status_display(),
             })
         return render(request, 'enroll/table.html', {'data': data})
